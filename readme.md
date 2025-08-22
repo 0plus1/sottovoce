@@ -8,3 +8,12 @@ For a list of suicide prevention hotlines and mental health resources worldwide,
 - [Befrienders Worldwide](https://www.befrienders.org/)
 - [International Association for Suicide Prevention (IASP) - Crisis Centres](https://www.iasp.info/crisis-centres-helplines/)
 - [Suicide.org - International Suicide Hotlines](https://www.suicide.org/international-suicide-hotlines.html)
+
+### .env
+Rename .env-default to .env
+
+## Tests
+Run all tests with:
+```sh
+uv run -m unittest discover tests
+```
