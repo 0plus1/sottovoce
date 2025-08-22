@@ -1,6 +1,8 @@
 # SOTTOVOCE
 Private, local LLM based emotional support.
 
+[![Coverage Status](https://coveralls.io/repos/github/0plus1/sottovoce/badge.svg?branch=main)](https://coveralls.io/github/0plus1/sottovoce?branch=main)
+
 > **Disclaimer:**  
 > SOTTOVOCE is not a certified therapist or a substitute for professional mental health care. If you are experiencing a crisis or need immediate help, please reach out to a qualified professional or contact a local helpline.
 
