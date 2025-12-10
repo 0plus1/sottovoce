@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class SessionLogger:
@@ -12,7 +12,7 @@ class SessionLogger:
         self.dir_path = Path(directory)
         self.dir_path.mkdir(parents=True, exist_ok=True)
         if filename is None:
-            timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             filename = f"session_{timestamp}.log"
         self.file_path = self.dir_path / filename
 
