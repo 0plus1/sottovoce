@@ -1,12 +1,11 @@
 import unittest
-from typing import Optional
 
 from src.config import Settings
 import main
 
 
 class DummyRecorder:
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: object) -> None:
         self.kwargs = kwargs
 
     def text(self) -> str:
@@ -15,7 +14,7 @@ class DummyRecorder:
     def __enter__(self) -> "DummyRecorder":
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
+    def __exit__(self) -> None:
         return None
 
 
@@ -40,10 +39,10 @@ class MainTests(unittest.TestCase):
             main.AudioToTextRecorder = original_cls
 
         self.assertIsInstance(recorder, DummyRecorder)
-        self.assertEqual(recorder.kwargs["model"], "tiny")
-        self.assertEqual(recorder.kwargs["compute_type"], "int8")
-        self.assertEqual(recorder.kwargs["language"], "en")
-        self.assertFalse(recorder.kwargs["use_microphone"])
+        self.assertEqual(recorder.kwargs["model"], "tiny")  # type: ignore[attr-defined]
+        self.assertEqual(recorder.kwargs["compute_type"], "int8")  # type: ignore[attr-defined]
+        self.assertEqual(recorder.kwargs["language"], "en")  # type: ignore[attr-defined]
+        self.assertFalse(recorder.kwargs["use_microphone"])  # type: ignore[attr-defined]
 
     def test_build_llm_client(self) -> None:
         settings = Settings(
