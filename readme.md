@@ -1,10 +1,10 @@
 # SOTTOVOCE
-Private, local LLM based emotional support.
-
+Private, local LLM based conversational partner, with long term memory.
 [![Coverage Status](https://coveralls.io/repos/github/0plus1/sottovoce/badge.svg?branch=main)](https://coveralls.io/github/0plus1/sottovoce?branch=main)
 
 > **Disclaimer:**  
-> SOTTOVOCE is not a certified therapist or a substitute for professional mental health care. If you are experiencing a crisis or need immediate help, please reach out to a qualified professional or contact a local helpline.
+> SOTTOVOCE is not a certified therapist or a substitute for professional mental health care.
+If you are experiencing a crisis or need immediate help, please reach out to a qualified professional or contact a local helpline.
 
 For a list of suicide prevention hotlines and mental health resources worldwide, visit:  
 - [Befrienders Worldwide](https://www.befrienders.org/)
@@ -13,7 +13,7 @@ For a list of suicide prevention hotlines and mental health resources worldwide,
 
 ## Dependencies
 This project uses:
-* [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT) for the main voice loop
+* [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT) for the conversation loop
 * [Piper](https://github.com/OHF-Voice/piper1-gpl/tree/main) for speech synthesis
 
 ## Install
@@ -41,6 +41,7 @@ Create an optional `PROMPT.md` file, containing the system prompt.
 uv run ./main.py
 ```
 Loop: listen → transcribe → send to local LLM → log turn → repeat. Session logs live in `session_logs/`.
+
 Press Ctrl+C to exit.
 
 ## Test
