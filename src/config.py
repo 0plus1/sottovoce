@@ -17,6 +17,13 @@ class Settings:
     llm_model: str
     llm_timeout: float
     session_logs_dir: str
+    tts_enabled: bool
+    tts_voice_path: str
+    tts_use_cuda: bool
+    tts_length_scale: float
+    tts_noise_scale: float
+    tts_noise_w_scale: float
+    tts_volume: float
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -36,6 +43,13 @@ def get_settings() -> Settings:
     llm_model = os.getenv("LLM_MODEL", "local-model").strip()
     llm_timeout = float(os.getenv("LLM_TIMEOUT", "60"))
     session_logs_dir = os.getenv("SESSION_LOGS_DIR", "session_logs").strip()
+    tts_enabled = _bool_env("TTS_ENABLED", False)
+    tts_voice_path = os.getenv("TTS_VOICE_PATH", "").strip()
+    tts_use_cuda = _bool_env("TTS_USE_CUDA", False)
+    tts_length_scale = float(os.getenv("TTS_LENGTH_SCALE", "1.0"))
+    tts_noise_scale = float(os.getenv("TTS_NOISE_SCALE", "0.667"))
+    tts_noise_w_scale = float(os.getenv("TTS_NOISE_W_SCALE", "0.8"))
+    tts_volume = float(os.getenv("TTS_VOLUME", "1.0"))
 
     return Settings(
         rtstt_model=rtstt_model,
@@ -46,4 +60,11 @@ def get_settings() -> Settings:
         llm_model=llm_model,
         llm_timeout=llm_timeout,
         session_logs_dir=session_logs_dir,
+        tts_enabled=tts_enabled,
+        tts_voice_path=tts_voice_path,
+        tts_use_cuda=tts_use_cuda,
+        tts_length_scale=tts_length_scale,
+        tts_noise_scale=tts_noise_scale,
+        tts_noise_w_scale=tts_noise_w_scale,
+        tts_volume=tts_volume,
     )

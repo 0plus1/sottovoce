@@ -3,3 +3,6 @@ __pycache__
 session_logs/*
 !session_logs/.gitkeep
 .coverage
+voices/*
+!voices/.gitkeep
+PROMPT.md

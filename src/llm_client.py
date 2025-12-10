@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -18,11 +19,19 @@ class LLMClient:
 
     def __init__(self, config: LLMConfig):
         self.config = config
+        self.system_prompt: Optional[str] = None
+
+    def load_system_prompt(self, path: Path) -> None:
+        self.system_prompt = path.read_text(encoding="utf-8")
 
     def complete(self, prompt: str) -> str:
+        messages: List[Dict[str, str]] = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt})
         payload: Dict[str, Any] = {
             "model": self.config.model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
             "stream": False,
         }
         response = requests.post(

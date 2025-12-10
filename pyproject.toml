@@ -8,6 +8,11 @@ dependencies = [
     "RealtimeSTT>=0.3.104",
     "python-dotenv>=1.1.1",
     "requests>=2.32.3",
+    "piper-tts>=1.2.0",
+    "webrtcvad>=2.0.10",
+    "sounddevice>=0.5.3",
+    "coverage>=7.13.0",
+    "pytest>=9.0.2",
 ]
 
 [dependency-groups]

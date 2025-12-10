@@ -14,13 +14,26 @@ For a list of suicide prevention hotlines and mental health resources worldwide,
 ## Dependencies
 This project uses:
 * [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT) for the main voice loop
+* [Piper](https://github.com/OHF-Voice/piper1-gpl/tree/main) for speech synthesis
 
 ## Install
 
-1) Install `ffmpeg`
-2) Install `uv`
-3) Install deps: `uv sync`
-4) Copy `.env-default` to `.env`
+### System wide requirements
+Install [ffmpeg](https://www.ffmpeg.org/)
+Install [uv](https://github.com/astral-sh/uv)
+
+### Repo setup
+Install dependencies: `uv sync`
+
+Copy `.env-default` to `.env`
+
+Download a voice and make sure it's in the `voices` folder.
+The repo is pre-configured to work out of the box with this command:
+```
+uv run -m piper.download_voices en_US-lessac-medium --data-dir ./voices
+```
+
+Create an optional `PROMPT.md` file, containing the system prompt.
 
 ## Run
 
@@ -32,6 +45,6 @@ Press Ctrl+C to exit.
 
 ## Test
 ```
-coverage run -m pytest
+coverage run -m pytest -p no:warnings
 # python -m dotenv run -- coveralls
 ```

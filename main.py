@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import sys
-import warnings
 from typing import Optional, Protocol, runtime_checkable
+from pathlib import Path
 
-from RealtimeSTT import AudioToTextRecorder  # pyright: ignore[reportMissingTypeStubs]
+from src.filteredWarnings import suppress_noisy_warnings
+# Apply warning filters before importing libraries that emit noisy warnings.
+suppress_noisy_warnings()
+from RealtimeSTT import AudioToTextRecorder  # pyright: ignore[reportMissingTypeStubs]  # noqa: E402
 
-from src.config import Settings, get_settings
-from src.llm_client import LLMClient, LLMConfig
-from src.session_logger import SessionLogger
-
+from src.config import Settings, get_settings  # noqa: E402
+from src.llm_client import LLMClient, LLMConfig # noqa: E402
+from src.session_logger import SessionLogger # noqa: E402
+from src.tts_engine import TtsEngine # noqa: E402
 
 @runtime_checkable
 class RecorderProtocol(Protocol):
@@ -49,8 +52,8 @@ def build_llm_client(settings: Settings) -> LLMClient:
     return LLMClient(cfg)
 
 
-def transcribe_loop(recorder: RecorderProtocol, llm_client: LLMClient, logger: SessionLogger) -> None:
-    """Sequential listen -> transcribe -> LLM -> log loop."""
+def transcribe_loop(recorder: RecorderProtocol, llm_client: LLMClient, logger: SessionLogger, tts_engine: TtsEngine) -> None:
+    """Sequential listen -> transcribe -> LLM -> TTS -> log loop."""
     print("Initialising. Press Ctrl+C to quit.")
     print(f"Session log: {logger.path()}")
     while True:
@@ -66,21 +69,27 @@ def transcribe_loop(recorder: RecorderProtocol, llm_client: LLMClient, logger: S
             continue
         print(f"[ASSISTANT] {llm_response}")
         logger.append_turn(user_text, llm_response)
+        if tts_engine.enabled:
+            try:
+                print("[SYSTEM] TTS speaking...")
+                audio_path = logger.path().with_suffix(".wav")
+                tts_engine.synthesize(llm_response, audio_path)
+            except Exception as exc:
+                print(f"[SYSTEM] TTS failed: {exc}", file=sys.stderr)
 
 
 def main() -> None:
+    suppress_noisy_warnings()
     settings = get_settings()
-    # Hide noisy RuntimeWarnings from faster_whisper feature extraction.
-    warnings.filterwarnings(
-        "ignore",
-        category=RuntimeWarning,
-        module="faster_whisper.feature_extractor",
-    )
     try:
         llm_client = build_llm_client(settings)
+        prompt_path = Path("PROMPT.md")
+        if prompt_path.exists():
+            llm_client.load_system_prompt(prompt_path)
         logger = SessionLogger(directory=settings.session_logs_dir)
+        tts_engine = TtsEngine(settings)
         with build_recorder(settings) as recorder:
-            transcribe_loop(recorder, llm_client, logger)
+            transcribe_loop(recorder, llm_client, logger, tts_engine)
     except KeyboardInterrupt:
         print("\nExiting.")
     except Exception as exc:  # pragma: no cover - runtime path
