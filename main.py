@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import logging
 import sys
 import warnings
 from typing import Optional, Protocol, runtime_checkable
 
-from RealtimeSTT import AudioToTextRecorder # pyright: ignore[reportMissingTypeStubs]
+from RealtimeSTT import AudioToTextRecorder  # pyright: ignore[reportMissingTypeStubs]
 
 from src.config import Settings, get_settings
+from src.llm_client import LLMClient, LLMConfig
+from src.session_logger import SessionLogger
 
 
 @runtime_checkable
@@ -29,23 +30,42 @@ class RecorderProtocol(Protocol):
 def build_recorder(settings: Settings) -> RecorderProtocol:
     """Create a recorder configured from Settings."""
     recorder: RecorderProtocol = AudioToTextRecorder(
-        model=settings.model,
-        compute_type=settings.compute_type,
-        language=settings.language,
-        use_microphone=settings.use_microphone,
-        level=settings.log_level,
-        no_log_file=settings.no_log_file,
+        model=settings.rtstt_model,
+        compute_type=settings.rtstt_compute_type,
+        language=settings.rtstt_language,
+        use_microphone=settings.rtstt_use_microphone,
+        no_log_file=True
     )
     return recorder
 
 
-def transcribe_loop(recorder: RecorderProtocol) -> None:
-    # Sequential listen -> transcribe loop. Blocking and linear by design.
+def build_llm_client(settings: Settings) -> LLMClient:
+    """Instantiate the LLM client configured for LM Studio (OpenAI-compatible)."""
+    cfg = LLMConfig(
+        endpoint=settings.llm_endpoint,
+        model=settings.llm_model,
+        timeout=settings.llm_timeout,
+    )
+    return LLMClient(cfg)
+
+
+def transcribe_loop(recorder: RecorderProtocol, llm_client: LLMClient, logger: SessionLogger) -> None:
+    """Sequential listen -> transcribe -> LLM -> log loop."""
     print("Initialising. Press Ctrl+C to quit.")
+    print(f"Session log: {logger.path()}")
     while True:
-        text = recorder.text()
-        if text:
-            print(text)
+        user_text = recorder.text()
+        if not user_text:
+            continue
+        print(f"[YOU] {user_text}")
+        print("[SYSTEM] Processing response...")
+        try:
+            llm_response = llm_client.complete(user_text)
+        except Exception as exc:
+            print(f"[SYSTEM] LLM call failed: {exc}", file=sys.stderr)
+            continue
+        print(f"[ASSISTANT] {llm_response}")
+        logger.append_turn(user_text, llm_response)
 
 
 def main() -> None:
@@ -56,13 +76,11 @@ def main() -> None:
         category=RuntimeWarning,
         module="faster_whisper.feature_extractor",
     )
-    logging.basicConfig(
-        level=settings.log_level,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-    )
     try:
+        llm_client = build_llm_client(settings)
+        logger = SessionLogger(directory=settings.session_logs_dir)
         with build_recorder(settings) as recorder:
-            transcribe_loop(recorder)
+            transcribe_loop(recorder, llm_client, logger)
     except KeyboardInterrupt:
         print("\nExiting.")
     except Exception as exc:  # pragma: no cover - runtime path

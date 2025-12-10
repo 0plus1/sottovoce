@@ -7,6 +7,7 @@ requires-python = ">=3.10,<3.11"
 dependencies = [
     "RealtimeSTT>=0.3.104",
     "python-dotenv>=1.1.1",
+    "requests>=2.32.3",
 ]
 
 [dependency-groups]

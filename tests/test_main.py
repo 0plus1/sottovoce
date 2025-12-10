@@ -22,12 +22,14 @@ class DummyRecorder:
 class MainTests(unittest.TestCase):
     def test_build_recorder_passes_settings(self) -> None:
         settings = Settings(
-            model="tiny",
-            compute_type="int8",
-            language="en",
-            use_microphone=False,
-            log_level=10,
-            no_log_file=True,
+            rtstt_model="tiny",
+            rtstt_compute_type="int8",
+            rtstt_language="en",
+            rtstt_use_microphone=False,
+            llm_endpoint="http://localhost:1234/v1/chat/completions",
+            llm_model="test-model",
+            llm_timeout=5.0,
+            session_logs_dir="session_logs",
         )
 
         original_cls = main.AudioToTextRecorder
@@ -42,7 +44,22 @@ class MainTests(unittest.TestCase):
         self.assertEqual(recorder.kwargs["compute_type"], "int8")
         self.assertEqual(recorder.kwargs["language"], "en")
         self.assertFalse(recorder.kwargs["use_microphone"])
-        self.assertEqual(recorder.kwargs["level"], 10)
+
+    def test_build_llm_client(self) -> None:
+        settings = Settings(
+            rtstt_model="tiny",
+            rtstt_compute_type="int8",
+            rtstt_language="en",
+            rtstt_use_microphone=False,
+            llm_endpoint="http://localhost:9999/v1/chat/completions",
+            llm_model="local-model",
+            llm_timeout=7.5,
+            session_logs_dir="session_logs",
+        )
+        client = main.build_llm_client(settings)
+        self.assertEqual(client.config.endpoint, "http://localhost:9999/v1/chat/completions")
+        self.assertEqual(client.config.model, "local-model")
+        self.assertEqual(client.config.timeout, 7.5)
 
 
 if __name__ == "__main__":

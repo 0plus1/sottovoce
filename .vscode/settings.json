@@ -1,3 +1,5 @@
 {
-    "python.defaultInterpreterPath": "uv run"
+    "python.defaultInterpreterPath": "uv run",
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.terminal.useEnvFile": true
 }

@@ -1,2 +1,5 @@
 .env
 __pycache__
+session_logs/*
+!session_logs/.gitkeep
+.coverage

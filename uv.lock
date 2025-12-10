@@ -847,6 +847,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "python-dotenv" },
     { name = "realtimestt" },
+    { name = "requests" },
 ]
 
 [package.dev-dependencies]
@@ -859,6 +860,7 @@ dev = [
 requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "realtimestt", specifier = ">=0.3.104" },
+    { name = "requests", specifier = ">=2.32.3" },
 ]
 
 [package.metadata.requires-dev]

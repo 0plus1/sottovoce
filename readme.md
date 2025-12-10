@@ -27,9 +27,11 @@ This project uses:
 ```sh
 uv run ./main.py
 ```
-Loop: listen → transcribe → repeat. Press Ctrl+C to exit.
+Loop: listen → transcribe → send to local LLM → log turn → repeat. Session logs live in `session_logs/`.
+Press Ctrl+C to exit.
 
 ## Test
 ```
 coverage run -m pytest
+# python -m dotenv run -- coveralls
 ```
