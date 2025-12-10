@@ -11,11 +11,25 @@ For a list of suicide prevention hotlines and mental health resources worldwide,
 - [International Association for Suicide Prevention (IASP) - Crisis Centres](https://www.iasp.info/crisis-centres-helplines/)
 - [Suicide.org - International Suicide Hotlines](https://www.suicide.org/international-suicide-hotlines.html)
 
-### .env
-Rename .env-default to .env
+## Dependencies
+This project uses:
+* [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT) for the main voice loop
 
-## Tests
-Run all tests with:
+## Install
+
+1) Install `ffmpeg`
+2) Install `uv`
+3) Install deps: `uv sync`
+4) Copy `.env-default` to `.env`
+
+## Run
+
 ```sh
-uv run -m unittest discover tests
+uv run ./main.py
+```
+Loop: listen → transcribe → repeat. Press Ctrl+C to exit.
+
+## Test
+```
+coverage run -m pytest
 ```

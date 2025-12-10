@@ -1,36 +1,74 @@
+from __future__ import annotations
 
-import numpy
-import numpy.typing as numpy_types
-from src.trascribe import transcribe # pyright: ignore[reportUnknownVariableType]
-from src.recorder import record_audio_vad
-from typing import Optional
-from src.console import print_info, print_error, print_debug, print_success
-from src.parameters import debug_mode
+import logging
+import sys
+import warnings
+from typing import Optional, Protocol, runtime_checkable
+
+from RealtimeSTT import AudioToTextRecorder # pyright: ignore[reportMissingTypeStubs]
+
+from src.config import Settings, get_settings
+
+
+@runtime_checkable
+class RecorderProtocol(Protocol):
+    """Minimal protocol we rely on from RealtimeSTT.AudioToTextRecorder."""
+
+    def text(self, on_transcription_finished: Optional[object] = None) -> Optional[str]: ...
+
+    def __enter__(self) -> "RecorderProtocol": ...
+
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[object],
+    ) -> None: ...
+
+
+def build_recorder(settings: Settings) -> RecorderProtocol:
+    """Create a recorder configured from Settings."""
+    recorder: RecorderProtocol = AudioToTextRecorder(
+        model=settings.model,
+        compute_type=settings.compute_type,
+        language=settings.language,
+        use_microphone=settings.use_microphone,
+        level=settings.log_level,
+        no_log_file=settings.no_log_file,
+    )
+    return recorder
+
+
+def transcribe_loop(recorder: RecorderProtocol) -> None:
+    # Sequential listen -> transcribe loop. Blocking and linear by design.
+    print("Initialising. Press Ctrl+C to quit.")
+    while True:
+        text = recorder.text()
+        if text:
+            print(text)
+
+
+def main() -> None:
+    settings = get_settings()
+    # Hide noisy RuntimeWarnings from faster_whisper feature extraction.
+    warnings.filterwarnings(
+        "ignore",
+        category=RuntimeWarning,
+        module="faster_whisper.feature_extractor",
+    )
+    logging.basicConfig(
+        level=settings.log_level,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
+    try:
+        with build_recorder(settings) as recorder:
+            transcribe_loop(recorder)
+    except KeyboardInterrupt:
+        print("\nExiting.")
+    except Exception as exc:  # pragma: no cover - runtime path
+        print(f"Fatal error: {exc}", file=sys.stderr)
+        raise
+
 
 if __name__ == "__main__":
-    print_info("Welcome to sottovoce!")
-    print_info("Press Enter to start...\n")
-    try:
-        while True:
-            print_info("[SYSTEM] Listening for speech...")
-            audio_data: Optional[bytes] = record_audio_vad()
-            if audio_data is None:
-                print_error("[SYSTEM] No audio recorded. Please try again.")
-                continue
-            if (debug_mode):
-                print_debug(f"[DEBUG] Returned from record_audio_vad, bytes recorded: {len(audio_data)}")
-            audio_np: numpy_types.NDArray[numpy.float32] = numpy.frombuffer(audio_data, dtype=numpy.int16).astype(numpy.float32) / 32768.0
-            if (debug_mode):
-                print_debug(f"[DEBUG] audio_np shape: {audio_np.shape}, dtype: {audio_np.dtype}, size: {audio_np.size}")
-            if audio_np.size == 0:
-                print_error("[SYSTEM] No audio recorded. Please ensure your microphone is working.")
-                continue
-            print_info("[SYSTEM] Transcribing...")
-            try:
-                text: str = transcribe(audio_np)
-                print_success(f"[SYSTEM] Transcribed: {text}")
-            except Exception as e:
-                print_error(f"[ERROR] Transcription failed: {e}")
-            print_info("[SYSTEM] Listening cycle will restart.")
-    except KeyboardInterrupt:
-        print_info("\n[SYSTEM] Stopped by user. Goodbye!")
+    main()
