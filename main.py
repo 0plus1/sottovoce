@@ -11,6 +11,7 @@ from RealtimeSTT import AudioToTextRecorder  # pyright: ignore[reportMissingType
 
 from src.config import Settings, get_settings  # noqa: E402
 from src.llm_client import LLMClient, LLMConfig # noqa: E402
+from src.memory_manager import MemoryManager  # noqa: E402
 from src.session_logger import SessionLogger # noqa: E402
 from src.tts_engine import TtsEngine # noqa: E402
 
@@ -52,7 +53,13 @@ def build_llm_client(settings: Settings) -> LLMClient:
     return LLMClient(cfg)
 
 
-def transcribe_loop(recorder: RecorderProtocol, llm_client: LLMClient, logger: SessionLogger, tts_engine: TtsEngine) -> None:
+def transcribe_loop(
+    recorder: RecorderProtocol,
+    llm_client: LLMClient,
+    logger: SessionLogger,
+    tts_engine: TtsEngine,
+    memory_manager: MemoryManager,
+) -> None:
     """Sequential listen -> transcribe -> LLM -> TTS -> log loop."""
     print("Initialising. Press Ctrl+C to quit.")
     print(f"Session log: {logger.path()}")
@@ -60,15 +67,21 @@ def transcribe_loop(recorder: RecorderProtocol, llm_client: LLMClient, logger: S
         user_text = recorder.text()
         if not user_text:
             continue
+        prompt = memory_manager.build_context_prompt(user_text)
         print(f"[YOU] {user_text}")
         print("[SYSTEM] Processing response...")
         try:
-            llm_response = llm_client.complete(user_text)
+            llm_response = llm_client.complete(prompt)
         except Exception as exc:
             print(f"[SYSTEM] LLM call failed: {exc}", file=sys.stderr)
             continue
         print(f"[ASSISTANT] {llm_response}")
         logger.append_turn(user_text, llm_response)
+        memory_manager.record_turn(user_text, llm_response)
+        usage = llm_client.last_usage or {}
+        total_tokens = usage.get("total_tokens")
+        if total_tokens and total_tokens > get_settings().context_window_tokens:
+            print(f"[SYSTEM] Context window exceeded ({total_tokens} > {get_settings().context_window_tokens}); summary applied.")
         if tts_engine.enabled:
             try:
                 print("[SYSTEM] TTS speaking...")
@@ -88,8 +101,9 @@ def main() -> None:
             llm_client.load_system_prompt(prompt_path)
         logger = SessionLogger(directory=settings.session_logs_dir)
         tts_engine = TtsEngine(settings)
+        memory_manager = MemoryManager(settings, session_id=logger.path().stem)
         with build_recorder(settings) as recorder:
-            transcribe_loop(recorder, llm_client, logger, tts_engine)
+            transcribe_loop(recorder, llm_client, logger, tts_engine, memory_manager)
     except KeyboardInterrupt:
         print("\nExiting.")
     except Exception as exc:  # pragma: no cover - runtime path

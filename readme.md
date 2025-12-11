@@ -15,6 +15,7 @@ For a list of suicide prevention hotlines and mental health resources worldwide,
 This project uses:
 * [RealtimeSTT](https://github.com/KoljaB/RealtimeSTT) for the conversation loop
 * [Piper](https://github.com/OHF-Voice/piper1-gpl/tree/main) for speech synthesis
+* [LangChain](https://python.langchain.com/) for recent-context memory persisted locally
 
 ## Install
 
@@ -40,12 +41,15 @@ Create an optional `PROMPT.md` file, containing the system prompt.
 ```sh
 uv run ./main.py
 ```
-Loop: listen → transcribe → send to local LLM → log turn → repeat. Session logs live in `session_logs/`.
 
-Press Ctrl+C to exit.
+## How it works (high level)
+- RealtimeSTT handles microphone VAD + transcription.
+- LLM replies come from your local LM Studio-compatible endpoint, guided by `PROMPT.md` (system prompt).
+- LangChain keeps recent context: a small rolling window of messages is persisted in a local SQLite file (`memory/memory.db`) and injected into each LLM call; token usage is monitored to respect a context window.
+- Responses are logged to `session_logs/` and optionally spoken via Piper TTS if enabled.
 
 ## Test
 ```
-coverage run -m pytest -p no:warnings
-# python -m dotenv run -- coveralls
+uv run coverage run -m pytest -p no:warnings
+# uv run dotenv run -- coveralls
 ```

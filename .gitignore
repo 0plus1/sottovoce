@@ -5,4 +5,6 @@ session_logs/*
 .coverage
 voices/*
 !voices/.gitkeep
+memory/*
+!memory/.gitkeep
 PROMPT.md

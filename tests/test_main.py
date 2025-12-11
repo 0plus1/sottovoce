@@ -37,6 +37,8 @@ class MainTests(unittest.TestCase):
             tts_noise_scale=0.667,
             tts_noise_w_scale=0.8,
             tts_volume=1.0,
+            context_window_tokens=2048,
+            context_window_messages=8,
         )
 
         original_cls = main.AudioToTextRecorder
@@ -69,6 +71,8 @@ class MainTests(unittest.TestCase):
             tts_noise_scale=0.667,
             tts_noise_w_scale=0.8,
             tts_volume=1.0,
+            context_window_tokens=2048,
+            context_window_messages=8,
         )
         client = main.build_llm_client(settings)
         self.assertEqual(client.config.endpoint, "http://localhost:9999/v1/chat/completions")
@@ -92,6 +96,8 @@ class MainTests(unittest.TestCase):
             tts_noise_scale=0.667,
             tts_noise_w_scale=0.8,
             tts_volume=1.0,
+            context_window_tokens=2048,
+            context_window_messages=8,
         )
         client = main.build_llm_client(settings)
         client.system_prompt = "system here"

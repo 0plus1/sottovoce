@@ -20,6 +20,7 @@ class LLMClient:
     def __init__(self, config: LLMConfig):
         self.config = config
         self.system_prompt: Optional[str] = None
+        self.last_usage: Dict[str, Any] | None = None
 
     def load_system_prompt(self, path: Path) -> None:
         self.system_prompt = path.read_text(encoding="utf-8")
@@ -41,6 +42,7 @@ class LLMClient:
         )
         response.raise_for_status()
         data = response.json()
+        self.last_usage = data.get("usage")
         # Expected OpenAI-compatible structure
         choices = data.get("choices", [])
         if not choices:

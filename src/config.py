@@ -24,6 +24,8 @@ class Settings:
     tts_noise_scale: float
     tts_noise_w_scale: float
     tts_volume: float
+    context_window_tokens: int
+    context_window_messages: int
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -50,6 +52,8 @@ def get_settings() -> Settings:
     tts_noise_scale = float(os.getenv("TTS_NOISE_SCALE", "0.667"))
     tts_noise_w_scale = float(os.getenv("TTS_NOISE_W_SCALE", "0.8"))
     tts_volume = float(os.getenv("TTS_VOLUME", "1.0"))
+    context_window_tokens = int(os.getenv("CONTEXT_WINDOW_TOKENS", "2048"))
+    context_window_messages = int(os.getenv("CONTEXT_WINDOW_MESSAGES", "8"))
 
     return Settings(
         rtstt_model=rtstt_model,
@@ -67,4 +71,6 @@ def get_settings() -> Settings:
         tts_noise_scale=tts_noise_scale,
         tts_noise_w_scale=tts_noise_w_scale,
         tts_volume=tts_volume,
+        context_window_tokens=context_window_tokens,
+        context_window_messages=context_window_messages,
     )

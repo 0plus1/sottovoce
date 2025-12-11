@@ -25,6 +25,8 @@ class ConfigTests(unittest.TestCase):
             "TTS_NOISE_SCALE": "0.667",
             "TTS_NOISE_W_SCALE": "0.8",
             "TTS_VOLUME": "1.0",
+            "CONTEXT_WINDOW_TOKENS": "2048",
+            "CONTEXT_WINDOW_MESSAGES": "8",
         }
         for key, value in baseline.items():
             os.environ[key] = value
@@ -51,6 +53,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(settings.tts_noise_scale, 0.667)
         self.assertEqual(settings.tts_noise_w_scale, 0.8)
         self.assertEqual(settings.tts_volume, 1.0)
+        self.assertEqual(settings.context_window_tokens, 2048)
+        self.assertEqual(settings.context_window_messages, 8)
 
     def test_env_overrides(self) -> None:
         os.environ["RTSTT_MODEL"] = "small"
@@ -68,6 +72,8 @@ class ConfigTests(unittest.TestCase):
         os.environ["TTS_NOISE_SCALE"] = "0.5"
         os.environ["TTS_NOISE_W_SCALE"] = "0.6"
         os.environ["TTS_VOLUME"] = "0.7"
+        os.environ["CONTEXT_WINDOW_TOKENS"] = "1024"
+        os.environ["CONTEXT_WINDOW_MESSAGES"] = "4"
 
         importlib.reload(config)
         settings = config.get_settings()
@@ -86,6 +92,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(settings.tts_noise_scale, 0.5)
         self.assertEqual(settings.tts_noise_w_scale, 0.6)
         self.assertEqual(settings.tts_volume, 0.7)
+        self.assertEqual(settings.context_window_tokens, 1024)
+        self.assertEqual(settings.context_window_messages, 4)
 
 
 if __name__ == "__main__":
