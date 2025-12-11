@@ -80,8 +80,22 @@ def transcribe_loop(
         memory_manager.record_turn(user_text, llm_response)
         usage = llm_client.last_usage or {}
         total_tokens = usage.get("total_tokens")
+        print(f"[SYSTEM] LLM usage: { total_tokens or 'unknown' } total tokens.")
         if total_tokens and total_tokens > get_settings().context_window_tokens:
-            print(f"[SYSTEM] Context window exceeded ({total_tokens} > {get_settings().context_window_tokens}); summary applied.")
+            # First, try reducing the short-term window; if already minimal, clear history.
+            if memory_manager.window > 2:
+                new_window = max(1, memory_manager.window // 2)
+                memory_manager.shrink_window(new_window)
+                print(
+                    f"[SYSTEM] Context window exceeded ({total_tokens} > {get_settings().context_window_tokens}); "
+                    f"reducing recent window to last {new_window} messages."
+                )
+            else:
+                memory_manager.clear_history()
+                print(
+                    f"[SYSTEM] Context window exceeded ({total_tokens} > {get_settings().context_window_tokens}); "
+                    "resetting conversation context."
+                )
         if tts_engine.enabled:
             try:
                 print("[SYSTEM] TTS speaking...")

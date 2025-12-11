@@ -38,3 +38,15 @@ class MemoryManager:
         self.history.add_messages(
             [HumanMessage(content=user_text), AIMessage(content=assistant_text)]
         )
+
+    def shrink_window(self, new_window: int) -> None:
+        """Reduce the rolling window size (does not delete history, just limits prompt assembly)."""
+        self.window = max(1, new_window)
+
+    def clear_history(self) -> None:
+        """Clear stored messages if the context must be reset."""
+        try:
+            self.history.clear()
+        except Exception:
+            # Fallback: overwrite with empty list if clear is unsupported.
+            self.history.messages = []
