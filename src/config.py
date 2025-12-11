@@ -26,6 +26,7 @@ class Settings:
     tts_volume: float
     context_window_tokens: int
     context_window_messages: int
+    summarise_prompt: str
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -54,6 +55,10 @@ def get_settings() -> Settings:
     tts_volume = float(os.getenv("TTS_VOLUME", "1.0"))
     context_window_tokens = int(os.getenv("CONTEXT_WINDOW_TOKENS", "2048"))
     context_window_messages = int(os.getenv("CONTEXT_WINDOW_MESSAGES", "8"))
+    summarise_prompt = os.getenv(
+        "SUMMARISE_PROMPT",
+        "Summarise the following conversation in under 5 sentences. Keep key facts, names, preferences, and goals. Avoid embellishment.",
+    )
 
     return Settings(
         rtstt_model=rtstt_model,
@@ -73,4 +78,5 @@ def get_settings() -> Settings:
         tts_volume=tts_volume,
         context_window_tokens=context_window_tokens,
         context_window_messages=context_window_messages,
+        summarise_prompt=summarise_prompt,
     )

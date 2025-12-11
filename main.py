@@ -59,6 +59,7 @@ def transcribe_loop(
     logger: SessionLogger,
     tts_engine: TtsEngine,
     memory_manager: MemoryManager,
+    settings: Settings,
 ) -> None:
     """Sequential listen -> transcribe -> LLM -> TTS -> log loop."""
     print("Initialising. Press Ctrl+C to quit.")
@@ -81,19 +82,29 @@ def transcribe_loop(
         usage = llm_client.last_usage or {}
         total_tokens = usage.get("total_tokens")
         print(f"[SYSTEM] LLM usage: { total_tokens or 'unknown' } total tokens.")
-        if total_tokens and total_tokens > get_settings().context_window_tokens:
+        warn_threshold = int(settings.context_window_tokens * 0.8)
+        if total_tokens and total_tokens > warn_threshold:
+            print(
+                f"[SYSTEM] Approaching context limit ({total_tokens}/{settings.context_window_tokens}). Summarising to retain continuity..."
+            )
+            try:
+                summary = memory_manager.summarise_history(llm_client, settings.summarise_prompt)
+                print(f"[SYSTEM] Summary stored: {summary}")
+            except Exception as exc:
+                print(f"[SYSTEM] Summary failed: {exc}", file=sys.stderr)
+        if total_tokens and total_tokens > settings.context_window_tokens:
             # First, try reducing the short-term window; if already minimal, clear history.
             if memory_manager.window > 2:
                 new_window = max(1, memory_manager.window // 2)
                 memory_manager.shrink_window(new_window)
                 print(
-                    f"[SYSTEM] Context window exceeded ({total_tokens} > {get_settings().context_window_tokens}); "
+                    f"[SYSTEM] Context window exceeded ({total_tokens} > {settings.context_window_tokens}); "
                     f"reducing recent window to last {new_window} messages."
                 )
             else:
                 memory_manager.clear_history()
                 print(
-                    f"[SYSTEM] Context window exceeded ({total_tokens} > {get_settings().context_window_tokens}); "
+                    f"[SYSTEM] Context window exceeded ({total_tokens} > {settings.context_window_tokens}); "
                     "resetting conversation context."
                 )
         if tts_engine.enabled:
@@ -117,7 +128,7 @@ def main() -> None:
         tts_engine = TtsEngine(settings)
         memory_manager = MemoryManager(settings, session_id=logger.path().stem)
         with build_recorder(settings) as recorder:
-            transcribe_loop(recorder, llm_client, logger, tts_engine, memory_manager)
+            transcribe_loop(recorder, llm_client, logger, tts_engine, memory_manager, settings)
     except KeyboardInterrupt:
         print("\nExiting.")
     except Exception as exc:  # pragma: no cover - runtime path

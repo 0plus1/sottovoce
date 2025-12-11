@@ -20,8 +20,8 @@ This project uses:
 ## Install
 
 ### System wide requirements
-Install [ffmpeg](https://www.ffmpeg.org/)
-Install [uv](https://github.com/astral-sh/uv)
+* [ffmpeg](https://www.ffmpeg.org/)
+* [uv](https://github.com/astral-sh/uv)
 
 ### Repo setup
 Install dependencies: `uv sync`
@@ -33,6 +33,7 @@ The repo is pre-configured to work out of the box with this command:
 ```
 uv run -m piper.download_voices en_US-lessac-medium --data-dir ./voices
 ```
+You can use any voice you like, simply change the environment variable `TTS_VOICE_PATH`
 
 Create an optional `PROMPT.md` file, containing the system prompt.
 
@@ -46,6 +47,7 @@ uv run ./main.py
 - RealtimeSTT handles microphone VAD + transcription.
 - LLM replies come from your local LM Studio-compatible endpoint, guided by `PROMPT.md` (system prompt).
 - LangChain keeps recent context: a small rolling window of messages is persisted in a local SQLite file (`memory/memory.db`) and injected into each LLM call; token usage is monitored to respect a context window.
+- If context window limit is approaching the conversation is summarised to allow near unlimited exchanges.
 - Responses are logged to `session_logs/` and optionally spoken via Piper TTS if enabled.
 
 ## Test

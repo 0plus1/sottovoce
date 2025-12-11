@@ -4,7 +4,26 @@ from unittest.mock import patch, MagicMock
 from src.config import Settings
 import main
 
-
+testable_settings = Settings(
+    rtstt_model="tiny",
+    rtstt_compute_type="int8",
+    rtstt_language="en",
+    rtstt_use_microphone=False,
+    llm_endpoint="http://localhost:9999/v1/chat/completions",
+    llm_model="local-model",
+    llm_timeout=7.5,
+    session_logs_dir="session_logs",
+    tts_enabled=True,
+    tts_voice_path="/tmp/voice.onnx",
+    tts_use_cuda=False,
+    tts_length_scale=1.0,
+    tts_noise_scale=0.667,
+    tts_noise_w_scale=0.8,
+    tts_volume=1.0,
+    context_window_tokens=2048,
+    context_window_messages=8,
+    summarise_prompt="Summarise the convo.",
+)
 class DummyRecorder:
     def __init__(self, **kwargs: object) -> None:
         self.kwargs = kwargs
@@ -21,25 +40,7 @@ class DummyRecorder:
 
 class MainTests(unittest.TestCase):
     def test_build_recorder_passes_settings(self) -> None:
-        settings = Settings(
-            rtstt_model="tiny",
-            rtstt_compute_type="int8",
-            rtstt_language="en",
-            rtstt_use_microphone=False,
-            llm_endpoint="http://localhost:1234/v1/chat/completions",
-            llm_model="test-model",
-            llm_timeout=5.0,
-            session_logs_dir="session_logs",
-            tts_enabled=True,
-            tts_voice_path="/tmp/voice.onnx",
-            tts_use_cuda=False,
-            tts_length_scale=1.0,
-            tts_noise_scale=0.667,
-            tts_noise_w_scale=0.8,
-            tts_volume=1.0,
-            context_window_tokens=2048,
-            context_window_messages=8,
-        )
+        settings = testable_settings
 
         original_cls = main.AudioToTextRecorder
         try:
@@ -55,50 +56,14 @@ class MainTests(unittest.TestCase):
         self.assertFalse(recorder.kwargs["use_microphone"])  # type: ignore[attr-defined]
 
     def test_build_llm_client(self) -> None:
-        settings = Settings(
-            rtstt_model="tiny",
-            rtstt_compute_type="int8",
-            rtstt_language="en",
-            rtstt_use_microphone=False,
-            llm_endpoint="http://localhost:9999/v1/chat/completions",
-            llm_model="local-model",
-            llm_timeout=7.5,
-            session_logs_dir="session_logs",
-            tts_enabled=False,
-            tts_voice_path="",
-            tts_use_cuda=False,
-            tts_length_scale=1.0,
-            tts_noise_scale=0.667,
-            tts_noise_w_scale=0.8,
-            tts_volume=1.0,
-            context_window_tokens=2048,
-            context_window_messages=8,
-        )
+        settings = testable_settings
         client = main.build_llm_client(settings)
         self.assertEqual(client.config.endpoint, "http://localhost:9999/v1/chat/completions")
         self.assertEqual(client.config.model, "local-model")
         self.assertEqual(client.config.timeout, 7.5)
 
     def test_llm_client_system_prompt_injection(self) -> None:
-        settings = Settings(
-            rtstt_model="tiny",
-            rtstt_compute_type="int8",
-            rtstt_language="en",
-            rtstt_use_microphone=False,
-            llm_endpoint="http://localhost:9999/v1/chat/completions",
-            llm_model="local-model",
-            llm_timeout=7.5,
-            session_logs_dir="session_logs",
-            tts_enabled=False,
-            tts_voice_path="",
-            tts_use_cuda=False,
-            tts_length_scale=1.0,
-            tts_noise_scale=0.667,
-            tts_noise_w_scale=0.8,
-            tts_volume=1.0,
-            context_window_tokens=2048,
-            context_window_messages=8,
-        )
+        settings = testable_settings
         client = main.build_llm_client(settings)
         client.system_prompt = "system here"
 

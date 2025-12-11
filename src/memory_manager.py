@@ -50,3 +50,21 @@ class MemoryManager:
         except Exception:
             # Fallback: overwrite with empty list if clear is unsupported.
             self.history.messages = []
+
+    def summarise_history(self, summariser, prompt_prefix: str) -> str:
+        """
+        Summarize the full stored history using the provided LLM client.
+        The summariser must expose a .complete(prompt: str) -> str method.
+        """
+        msgs: List[BaseMessage] = self.history.messages
+        transcript = []
+        for m in msgs:
+            role = "User" if isinstance(m, HumanMessage) else "Assistant"
+            transcript.append(f"{role}: {m.content}")
+        convo = "\n".join(transcript)
+        prompt = f"{prompt_prefix}\n\nConversation:\n{convo}"
+        summary = summariser.complete(prompt)
+        # Reset and store summary as a single assistant message to keep context light.
+        self.clear_history()
+        self.history.add_messages([AIMessage(content=f"Summary: {summary}")])
+        return summary
