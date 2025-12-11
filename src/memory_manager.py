@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from __future__ import annotations
-
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
@@ -10,6 +8,7 @@ from langchain_community.chat_message_histories import SQLChatMessageHistory  # 
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage  # type: ignore[import-not-found]
 
 from src.config import Settings
+from src.types import SummariserProtocol
 
 
 class MemoryManager:
@@ -51,7 +50,7 @@ class MemoryManager:
             # Fallback: overwrite with empty list if clear is unsupported.
             self.history.messages = []
 
-    def summarise_history(self, summariser, prompt_prefix: str) -> str:
+    def summarise_history(self, summariser: SummariserProtocol, prompt_prefix: str) -> str:
         """
         Summarize the full stored history using the provided LLM client.
         The summariser must expose a .complete(prompt: str) -> str method.

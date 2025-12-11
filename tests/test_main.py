@@ -1,8 +1,9 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
+from src import builders
 from src.config import Settings
-import main
+from src.types import RecorderProtocol
 
 testable_settings = Settings(
     rtstt_model="tiny",
@@ -35,7 +36,7 @@ class DummyRecorder:
     def __enter__(self) -> "DummyRecorder":
         return self
 
-    def __exit__(self) -> None:
+    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None) -> None:
         return None
 
 
@@ -43,12 +44,22 @@ class MainTests(unittest.TestCase):
     def test_build_recorder_passes_settings(self) -> None:
         settings = testable_settings
 
-        original_cls = main.AudioToTextRecorder
+        # Patch inside the factory to avoid importing the real recorder.
+        original_factory = builders.create_recorder
+
+        def _fake_create(settings: Settings) -> RecorderProtocol:  # type: ignore[override]
+            return DummyRecorder(
+                model=settings.rtstt_model,
+                compute_type=settings.rtstt_compute_type,
+                language=settings.rtstt_language,
+                use_microphone=settings.rtstt_use_microphone,
+            )
+
+        builders.create_recorder = _fake_create  # type: ignore[assignment]
         try:
-            main.AudioToTextRecorder = DummyRecorder  # type: ignore[assignment]
-            recorder = main.build_recorder(settings)
+            recorder = builders.create_recorder(settings)
         finally:
-            main.AudioToTextRecorder = original_cls
+            builders.create_recorder = original_factory  # type: ignore[assignment]
 
         self.assertIsInstance(recorder, DummyRecorder)
         self.assertEqual(recorder.kwargs["model"], "tiny")  # type: ignore[attr-defined]
@@ -58,14 +69,14 @@ class MainTests(unittest.TestCase):
 
     def test_build_llm_client(self) -> None:
         settings = testable_settings
-        client = main.build_llm_client(settings)
+        client = builders.create_llm_client(settings)
         self.assertEqual(client.config.endpoint, "http://localhost:9999/v1/chat/completions")
         self.assertEqual(client.config.model, "local-model")
         self.assertEqual(client.config.timeout, 7.5)
 
     def test_llm_client_system_prompt_injection(self) -> None:
         settings = testable_settings
-        client = main.build_llm_client(settings)
+        client = builders.create_llm_client(settings)
         client.system_prompt = "system here"
 
         fake_response = MagicMock()
