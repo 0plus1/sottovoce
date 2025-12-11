@@ -23,6 +23,7 @@ testable_settings = Settings(
     context_window_tokens=2048,
     context_window_messages=8,
     summarise_prompt="Summarise the convo.",
+    llm_prompt_conversational="Keep replies concise...",
 )
 class DummyRecorder:
     def __init__(self, **kwargs: object) -> None:

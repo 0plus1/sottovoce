@@ -35,7 +35,12 @@ uv run -m piper.download_voices en_US-lessac-medium --data-dir ./voices
 ```
 You can use any voice you like, simply change the environment variable `TTS_VOICE_PATH`
 
+#### Prompts
 Create an optional `PROMPT.md` file, containing the system prompt.
+
+Some example prompts can be found in the [prompts](./example-prompts.md) file.
+
+To instruct the LLM to respond in a conversational way the environment variable `LLM_PROMPT_CONVERSATIONAL` is appended to each prompt.
 
 ## Run
 

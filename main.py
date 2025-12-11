@@ -122,8 +122,14 @@ def main() -> None:
     try:
         llm_client = build_llm_client(settings)
         prompt_path = Path("PROMPT.md")
+        system_prompt_parts = []
         if prompt_path.exists():
             llm_client.load_system_prompt(prompt_path)
+            system_prompt_parts.append(llm_client.system_prompt or "")
+        system_prompt_parts.append(settings.llm_prompt_conversational)
+        combined_prompt = "\n\n".join([p for p in system_prompt_parts if p.strip()])
+        if combined_prompt:
+            llm_client.system_prompt = combined_prompt
         logger = SessionLogger(directory=settings.session_logs_dir)
         tts_engine = TtsEngine(settings)
         memory_manager = MemoryManager(settings, session_id=logger.path().stem)

@@ -27,6 +27,7 @@ class Settings:
     context_window_tokens: int
     context_window_messages: int
     summarise_prompt: str
+    llm_prompt_conversational: str
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -59,6 +60,10 @@ def get_settings() -> Settings:
         "SUMMARISE_PROMPT",
         "Summarise the following conversation in under 5 sentences. Keep key facts, names, preferences, and goals. Avoid embellishment.",
     )
+    llm_prompt_conversational = os.getenv(
+        "LLM_PROMPT_CONVERSATIONAL",
+        "Keep replies concise, natural, and conversational—no emojis, no lists unless asked, and avoid using formatting such as bold or italics (e.g., *word*, **word**).",
+    )
 
     return Settings(
         rtstt_model=rtstt_model,
@@ -79,4 +84,5 @@ def get_settings() -> Settings:
         context_window_tokens=context_window_tokens,
         context_window_messages=context_window_messages,
         summarise_prompt=summarise_prompt,
+        llm_prompt_conversational=llm_prompt_conversational,
     )
